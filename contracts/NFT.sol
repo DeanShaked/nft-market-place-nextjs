@@ -6,10 +6,12 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract NFT is ERC721URIStorage {
-    // General Init
-    // _tokenIds - Struct that holds the amount of items (NFT's) the contract has,
-    //             Since initialized from Counters,
-    //             _tokenIds has access to Counters functions such as .current() / .increase() etc..
+    /**
+     * General Init.
+     *
+     * @param _tokenIds counter for the token ID's inheriting from Counters
+     * @param contractAddress address for the contract address handling the NFT's
+     */
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     address contractAddress;

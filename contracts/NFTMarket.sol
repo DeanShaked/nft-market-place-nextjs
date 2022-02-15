@@ -6,11 +6,15 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract NFTMarket is ReentrancyGuard {
-    // General Init
-    // Explanation: _itemsIds is a Struct that holds the amount of items (NFT's) the contract has,
-    //              since initialized from Counters,
-    //              _itemIds has access to Counters functions such as .current() / .increase() etc..
-
+    /**
+     * General Init. (item is reffering to NFT)
+     *
+     * @param _itemsIds counter of the item ID's, inherit from Counters
+     * @param _itemsSold counter of the amount of items sold, inherit from Counters
+     * @param owner address representing the owner of the item
+     * @param listingPrice integer representing the listing price of the item
+     * @param idToMarketItem struct of key and value pairs holding all the items (ex. idToMarketItem[1111])
+     */
     using Counters for Counters.Counter;
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
@@ -33,7 +37,6 @@ contract NFTMarket is ReentrancyGuard {
         bool sold;
     }
 
-    // TODO: Learn more about the mapping function.
     mapping(uint256 => MarketItem) private idToMarketItem;
 
     event MarketItemCreated(
@@ -122,6 +125,74 @@ contract NFTMarket is ReentrancyGuard {
         // Pay the owner of the contract. ( Commission for the market place creator :) )
         payable(owner).transfer(listingPrice);
     }
-}
 
-// 47:00
+    // Fetching all market items.
+    function fetchMarketItems() public view returns (MarketItem[] memory) {
+        uint256 itemCount = _itemIds.current();
+        uint256 unsoldItemCount = _itemIds.current() - _itemsSold.current();
+        uint256 currentIndex = 0;
+
+        MarketItem[] memory items = new MarketItem[](unsoldItemCount);
+
+        for (uint256 i = 0; i < itemCount; i++) {
+            if (idToMarketItem[i + 1].owner == address(0)) {
+                uint256 currentId = idToMarketItem[i + 1].itemId;
+                MarketItem storage currentItem = idToMarketItem[currentId];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+
+        return items;
+    }
+
+    // Fetching the NFT's list the user posses.
+    function fetchMyNFTs() public view returns (MarketItem[] memory) {
+        uint256 totalItemCount = _itemIds.current();
+        uint256 itemCount = 0;
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (idToMarketItem[i + 1].owner == msg.sender) {
+                itemCount += 1;
+            }
+        }
+
+        MarketItem[] memory items = new MarketItem[](itemCount);
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (idToMarketItem[i + 1].owner == msg.sender) {
+                uint256 currentId = idToMarketItem[i + 1].itemId;
+                MarketItem storage currentItem = idToMarketItem[currentId];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+        return items;
+    }
+
+    // Fetching the NFT's the user created himself.
+    function fetchItemsCreated() public view returns (MarketItem[] memory) {
+        uint256 totalItemCount = _itemIds.current();
+        uint256 itemCount = 0;
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (idToMarketItem[i + 1].seller == msg.sender) {
+                itemCount += 1;
+            }
+        }
+
+        MarketItem[] memory items = new MarketItem[](itemCount);
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (idToMarketItem[i + 1].seller == msg.sender) {
+                uint256 currentId = idToMarketItem[i + 1].itemId;
+                MarketItem storage currentItem = idToMarketItem[currentId];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+        return items;
+    }
+}
